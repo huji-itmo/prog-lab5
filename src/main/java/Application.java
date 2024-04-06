@@ -2,6 +2,7 @@ import commandDatabaseBridge.CommandDatabaseBridge;
 import commands.AbstractCommandProcessor;
 import commands.CommandProcessor;
 import commands.exceptions.CommandException;
+import commands.nativeCommands.Command;
 import console.ConsoleProcessor;
 import dataStructs.StudyGroup;
 import dataStructs.StudyGroupList;
@@ -10,6 +11,9 @@ import database.StudyGroupDatabase;
 import database.StudyGroupEntityBuilder;
 import parser.JsonFileParser;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.*;
@@ -29,7 +33,6 @@ public class Application {
                 new StudyGroupEntityBuilder(),
                 new JsonFileParser<>(Path.of(args[0]), StudyGroupList.class));
 
-        TreeMap
 
         new CommandDatabaseBridge<>(processor, database);
 

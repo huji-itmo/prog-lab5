@@ -17,7 +17,7 @@ public class RemoveGreaterCommand implements OverloadedCommand {
     public String execute(String args) throws CommandException {
 
         try {
-            int count = database.removeGreater(Integer.parseInt(args));
+            int count = database.removeGreaterOrLowerThanId(Integer.parseInt(args), true);
 
             return "Removed " + count + " elements.";
 

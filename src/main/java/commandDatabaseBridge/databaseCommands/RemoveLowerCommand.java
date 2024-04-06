@@ -18,7 +18,7 @@ public class RemoveLowerCommand implements OverloadedCommand {
 
         try {
 
-            int count = database.removeLower(Integer.parseInt(args));
+            int count = database.removeGreaterOrLowerThanId(Integer.parseInt(args), false);
 
             return "Removed " + count + " elements.";
         }

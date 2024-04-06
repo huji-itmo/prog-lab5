@@ -21,7 +21,7 @@ public class StudyGroupEntityBuilder extends EntityBuilder<StudyGroup> {
                             throw new CommandException(errLine);
                         });
 
-                if (group.getValues("\n").equals(values)) {
+                if (group == null || group.getValues("\n").equals(values)) {
                     err.accept("Something went wrong when creating new element...");
                     return null;
                 }
@@ -34,7 +34,7 @@ public class StudyGroupEntityBuilder extends EntityBuilder<StudyGroup> {
         },
         (out, err) ->
             StudyGroup.createFromInput(
-                    new Scanner(System.in), out, err)
+                    new Scanner(System.in), System.out::println, System.err::println)
         );
     }
 }

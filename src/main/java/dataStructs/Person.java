@@ -131,7 +131,7 @@ public class Person implements DatabaseEntity {
         }
 
         public static LocalDate enterBirthday(Scanner scanner, Consumer<String> standardOut, Consumer<String> errorOut) {
-            System.out.println("Enter group admin birthday (yyyy-mm-dd or null): ");
+            standardOut.accept("Enter group admin birthday (yyyy-mm-dd or null): ");
 
             String nextLine = scanner.nextLine();
 
@@ -141,10 +141,16 @@ public class Person implements DatabaseEntity {
 
             try {
 
-                return LocalDate.parse(nextLine);
+                LocalDate date = LocalDate.parse(nextLine);
+                if (date.getYear() <= 0) {
+                    errorOut.accept("Please use current era :(");
+                    return enterBirthday(scanner, standardOut, errorOut);
+                }
+
+                return date;
 
             } catch (DateTimeException | NumberOutOfBoundsException | NumberFormatException e) {
-                System.err.println(e.getMessage());
+                errorOut.accept(e.getMessage());
             }
             return enterBirthday(scanner, standardOut, errorOut);
         }

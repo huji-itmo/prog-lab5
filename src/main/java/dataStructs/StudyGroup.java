@@ -144,7 +144,7 @@ public class StudyGroup implements DatabaseEntity{
             }
 
             try {
-                int in = Integer.parseInt(scanner.nextLine()) ;
+                int in = Integer.parseInt(line) ;
                 checkStudentsCount(in);
 
                 return in;
@@ -200,8 +200,7 @@ public class StudyGroup implements DatabaseEntity{
             }
 
             try {
-                String in = scanner.nextLine();
-                return FormOfEducation.valueOf(in);
+                return FormOfEducation.valueOf(line);
             }
             catch (IllegalArgumentException e) {
                 errorOut.accept(e.getMessage());
@@ -217,8 +216,7 @@ public class StudyGroup implements DatabaseEntity{
                 return null;
             }
             try {
-                String in = scanner.nextLine();
-                return Semester.valueOf(in);
+                return Semester.valueOf(line);
             }
             catch (IllegalArgumentException e) {
                 errorOut.accept(e.getMessage());

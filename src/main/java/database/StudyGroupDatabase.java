@@ -27,40 +27,51 @@ public class StudyGroupDatabase extends CollectionDatabase<StudyGroup> {
 
     private final FileParser<StudyGroupList> parser;
 
-    /**
-     * Clears the collection and resets the last id counter.
-     */
+    @Override
+    public String getAllElements() {
+        StringBuilder builder = new StringBuilder();
+
+        if (getCollection().isEmpty()) {
+            builder.append("The database is currently empty.");
+            return builder.toString();
+        }
+
+        getCollection().stream()
+                .sorted(Comparator.comparingLong(StudyGroup::getId))
+                .forEach(instance -> {
+            builder.append(instance).append("\n");
+        });
+
+        return builder.toString();
+    }
+
     @Override
     public void clearCollection() {
+        pushToUndoStack(UndoLog.deletedElements(getCollection()));
+
         super.clearCollection();
         lastId = 0;
     }
 
-    /**
-     *
-     * @param id
-     * @return the number of deleted elements.
-     */
     @Override
-    public int removeGreater(long id) {
-        int prevSize = getCollection().size();
+    public int removeGreaterOrLowerThanId(long id, boolean greater) {
+        List<StudyGroup> deletedElements = new ArrayList<>();
 
-        getCollection().removeIf(group -> group.getId() > id);
+        getCollection().removeIf(group -> {
+            boolean res = group.getId() > id;
 
-        int newSize = getCollection().size();
+            if (!greater)
+                res = !res;
 
-        return prevSize - newSize;
-    }
+            if (res)
+                deletedElements.add(group);
 
-    @Override
-    public int removeLower(long id) {
-        int prevSize = getCollection().size();
+            return res;
+        });
 
-        getCollection().removeIf(group -> group.getId() < id);
+        pushToUndoStack(UndoLog.deletedElements(deletedElements));
 
-        int newSize = getCollection().size();
-
-        return prevSize - newSize;
+        return deletedElements.size();
     }
 
     @Override
@@ -149,25 +160,57 @@ public class StudyGroupDatabase extends CollectionDatabase<StudyGroup> {
         return (ArrayDeque<StudyGroup>)getCollection();
     }
 
-    public StudyGroup updateElementById( long id, StudyGroup new_element) throws IllegalValueException {
-        if (!removeElementById(id)) {
+    public StudyGroup updateElementById( long id, StudyGroup newElement) throws IllegalValueException {
+        StudyGroup oldElement = null;
+
+        for (StudyGroup group : getCollection()) {
+            if (group.getId() == id) {
+                oldElement = group;
+                break;
+            }
+        }
+
+        if (oldElement == null) {
             throw new IllegalValueException("Can't find an element with this id!");
         }
 
-        new_element.setId(id);
-        getCollection().add(new_element);
+        newElement.setId(id);
+        getCollection().add(newElement);
 
-        return new_element;
+        pushToUndoStack(UndoLog.changedElement(newElement, oldElement));
+
+        return newElement;
     }
 
     @Override
     public boolean removeElementById(long id) throws IllegalValueException {
-        return getCollection().removeIf(group -> group.getId() == id);
+        List<StudyGroup> deletedElements = new ArrayList<>(1);
+
+        boolean res =  getCollection().removeIf(group -> {
+            boolean found = group.getId() == id;
+
+            if (found)
+                deletedElements.add(group);
+
+            return found;
+        });
+
+        pushToUndoStack(UndoLog.deletedElements(deletedElements));
+
+        return res;
     }
 
     @Override
-    public void removeFirstElement() throws IllegalValueException {
-        getArrayDequeCollection().removeFirst();
+    public boolean removeFirstElement() throws IllegalValueException {
+        if (getArrayDequeCollection().isEmpty()) {
+            return false;
+        }
+
+        StudyGroup group = getArrayDequeCollection().removeFirst();
+
+        pushToUndoStack(UndoLog.deletedElements(group));
+
+        return true;
     }
     @Override
     public boolean addIfMin(StudyGroup group) {
@@ -240,14 +283,34 @@ public class StudyGroupDatabase extends CollectionDatabase<StudyGroup> {
         return maxId;
     }
 
-    /**
-     * Adds a new element and updates the last id.
-     *
-     * @param group
-     */
     @Override
     public void addElement(StudyGroup group) {
         super.addElement(group);
         group.setId(lastId++);
+
+        pushToUndoStack(UndoLog.addedElements(group));
+    }
+
+    Stack<UndoLog<StudyGroup>> undoLogStack = new Stack<>();
+    @Override
+    public void pushToUndoStack(UndoLog<StudyGroup> log) {
+        if (log.changesList.isEmpty()) {
+            return;
+        }
+
+        undoLogStack.push(log);
+    }
+
+    @Override
+    public boolean undo() throws RuntimeException{
+        if (undoLogStack.isEmpty())
+            return false;
+
+        boolean res = undoLogStack.pop().undo(getCollection());
+        if (!res) {
+            throw new RuntimeException("Something went wrong when undoing...");
+        }
+
+        return true;
     }
 }

@@ -27,5 +27,6 @@ public class CommandDatabaseBridge<T extends DatabaseEntity> {
         processor.getCommands().put("sum_of_average_mark", new SumOfAverageMarkCommand(database));
         processor.getCommands().put("print_descending", new PrintDescendingCommand(database));
         processor.getCommands().put("count_less_than_form_of_education", new CountLessThanFormOfEducationCommand(database));
+        processor.getCommands().put("undo", new UndoCommand(database));
     }
 }
